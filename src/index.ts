@@ -8,7 +8,7 @@ import colors from 'picocolors'
 
 import { FRAMEWORKS, TEMPLATES } from './frameworks'
 
-const { blue, blueBright, cyan, green, magenta, red, redBright, yellow } = colors
+const { cyan, magenta } = colors
 
 const argv = mri<{
 	template?: string
@@ -31,15 +31,8 @@ Options:
   -t, --template NAME        use a specific template
 
 Available templates:
-${yellow('vanilla-ts     vanilla')}
-${green('vue-ts         vue')} 
-${cyan('react-ts       react')}
-${cyan('react-swc-ts   react-swc')}
-${magenta('preact-ts      preact')}
-${redBright('lit-ts         lit')}
-${red('svelte-ts      svelte')}
-${blue('solid-ts       solid')}
-${blueBright('qwik-ts        qwik')}`
+${magenta('electron-vite-shadcn-ts    Electron + Vite + shadcn/ui + TypeScript')}
+${cyan('react-ts-biome-tailwind    React + TypeScript + Biome + Tailwind')}`
 
 const renameFiles: Record<string, string | undefined> = {
 	_gitignore: '.gitignore',
@@ -117,7 +110,7 @@ async function init() {
 			defaultValue: toValidPackageName(packageName),
 			placeholder: toValidPackageName(packageName),
 			validate(dir) {
-				if (!isValidPackageName(dir)) {
+				if (!dir || !isValidPackageName(dir)) {
 					return 'Invalid package.json name'
 				}
 			},
@@ -233,6 +226,32 @@ async function init() {
 		setupReactSwc(root, template.endsWith('-ts'))
 	}
 
+	// 6. Handle monorepo scope replacement
+	const variantConfig =
+		FRAMEWORKS.flatMap((f) => f.variants).find((v) => v.name === template)
+	if (variantConfig?.monorepo) {
+		const scope = `@${packageName}`
+		replaceMonorepoScope(root, scope)
+
+		// Also update sub-package names
+		const appsDir = path.join(root, 'apps')
+		const packagesDir = path.join(root, 'packages')
+		for (const dir of [appsDir, packagesDir]) {
+			if (!fs.existsSync(dir)) continue
+			for (const sub of fs.readdirSync(dir)) {
+				const subPkg = path.join(dir, sub, 'package.json')
+				if (fs.existsSync(subPkg)) {
+					const content = JSON.parse(fs.readFileSync(subPkg, 'utf-8'))
+					content.name = `${scope}/${sub}`
+					if (content.productName === 'my-electron-app') {
+						content.productName = packageName
+					}
+					fs.writeFileSync(subPkg, `${JSON.stringify(content, null, 2)}\n`)
+				}
+			}
+		}
+	}
+
 	let doneMessage = ''
 	const cdProjectName = path.relative(cwd, root)
 	doneMessage += 'Done. Now run:\n'
@@ -252,6 +271,39 @@ async function init() {
 			break
 	}
 	prompts.outro(doneMessage)
+}
+
+function replaceMonorepoScope(root: string, scope: string) {
+	const textExtensions = new Set([
+		'.ts',
+		'.tsx',
+		'.js',
+		'.jsx',
+		'.json',
+		'.css',
+		'.html',
+		'.mjs',
+		'.cjs',
+		'.yaml',
+		'.yml',
+	])
+
+	function walkAndReplace(dir: string) {
+		for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+			const fullPath = path.join(dir, entry.name)
+			if (entry.isDirectory()) {
+				walkAndReplace(fullPath)
+			} else if (textExtensions.has(path.extname(entry.name))) {
+				const content = fs.readFileSync(fullPath, 'utf-8')
+				const replaced = content.replaceAll('@repo/', `${scope}/`).replaceAll('@repo"', `${scope}"`)
+				if (replaced !== content) {
+					fs.writeFileSync(fullPath, replaced, 'utf-8')
+				}
+			}
+		}
+	}
+
+	walkAndReplace(root)
 }
 
 function formatTargetDir(targetDir: string) {
