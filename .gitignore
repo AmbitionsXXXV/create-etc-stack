@@ -6,3 +6,9 @@ package-lock.json
 dist/
 
 .npmrc
+
+# Generated files
+src/generated/
+
+# Bun compiled binary
+create-etc-stack
