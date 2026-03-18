@@ -1,8 +1,6 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-	"organizeImports": {
-		"enabled": true
-	},
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
 	"linter": {
 		"enabled": true,
 		"rules": {
@@ -26,18 +24,21 @@
 				"useExhaustiveDependencies": "off"
 			},
 			"suspicious": {
-				"noConsoleLog": "warn",
 				"noExplicitAny": "off",
 				"noImplicitAnyLet": "off",
-				"noAssignInExpressions": "off"
+				"noAssignInExpressions": "off",
+				"noConsole": { "level": "warn", "options": { "allow": ["log"] } }
 			},
 			"style": {
 				"useImportType": "off",
 				"noParameterAssign": "off",
 				"noNegationElse": "error",
-				"useShorthandArrayType": "error",
 				"noNonNullAssertion": "off",
-				"useSelfClosingElements": "off"
+				"useSelfClosingElements": "off",
+				"useConsistentArrayType": {
+					"level": "error",
+					"options": { "syntax": "shorthand" }
+				}
 			},
 			"nursery": {
 				"useSortedClasses": {
@@ -50,7 +51,7 @@
 				}
 			}
 		},
-		"ignore": ["./tools/*.js"]
+		"includes": ["**", "!tools/**/*.js"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -68,15 +69,16 @@
 		}
 	},
 	"files": {
-		"ignore": [
-			"apps/api/**",
-			"**/node_modules",
-			"**/dist",
-			"**/build",
-			"**/.turbo",
-			"**/.react-router",
-			"**/coverage",
-			"**/tsconfig.*.json"
+		"includes": [
+			"**",
+			"!**/apps/api/**",
+			"!**/node_modules",
+			"!**/dist",
+			"!**/build",
+			"!**/.turbo",
+			"!**/.react-router",
+			"!**/coverage",
+			"!**/tsconfig.*.json"
 		]
 	}
 }

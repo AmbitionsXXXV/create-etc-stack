@@ -3,10 +3,10 @@ import spawn from 'cross-spawn'
 import mri from 'mri'
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import colors from 'picocolors'
 
 import { FRAMEWORKS, TEMPLATES } from './frameworks'
+import { templates } from './generated/templates'
 
 const { cyan, magenta } = colors
 
@@ -34,7 +34,7 @@ Available templates:
 ${magenta('electron-vite-shadcn-ts    Electron + Vite + shadcn/ui + TypeScript')}
 ${cyan('react-ts-biome-tailwind    React + TypeScript + Biome + Tailwind')}`
 
-const renameFiles: Record<string, string | undefined> = {
+const RENAME_FILES: Record<string, string> = {
 	_gitignore: '.gitignore',
 }
 
@@ -45,8 +45,7 @@ async function init() {
 	const argTemplate = argv.template
 	const argOverwrite = argv.overwrite
 
-	const help = argv.help
-	if (help) {
+	if (argv.help) {
 		console.log(helpMessage)
 		return
 	}
@@ -77,18 +76,9 @@ async function init() {
 							: `Target directory "${targetDir}"`
 					} is not empty. Please choose how to proceed:`,
 					options: [
-						{
-							label: 'Cancel operation',
-							value: 'no',
-						},
-						{
-							label: 'Remove existing files and continue',
-							value: 'yes',
-						},
-						{
-							label: 'Ignore files and continue',
-							value: 'ignore',
-						},
+						{ label: 'Cancel operation', value: 'no' },
+						{ label: 'Remove existing files and continue', value: 'yes' },
+						{ label: 'Ignore files and continue', value: 'ignore' },
 					],
 				})
 		if (prompts.isCancel(overwrite)) return cancel()
@@ -166,7 +156,7 @@ async function init() {
 	const root = path.join(cwd, targetDir)
 	fs.mkdirSync(root, { recursive: true })
 
-	// determine template
+	// Handle SWC variant
 	let isReactSwc = false
 	if (template.includes('-swc')) {
 		isReactSwc = true
@@ -175,86 +165,87 @@ async function init() {
 
 	const pkgManager = pkgInfo ? pkgInfo.name : 'npm'
 
+	// Handle custom commands (e.g. React Router, TanStack Router)
 	const { customCommand } =
 		FRAMEWORKS.flatMap((f) => f.variants).find((v) => v.name === template) ?? {}
 
 	if (customCommand) {
 		const fullCustomCommand = getFullCustomCommand(customCommand, pkgInfo)
-
 		const [command, ...args] = fullCustomCommand.split(' ')
-		// we replace TARGET_DIR here because targetDir may include a space
 		const replacedArgs = args.map((arg) =>
 			arg.replace('TARGET_DIR', () => targetDir),
 		)
-		const { status } = spawn.sync(command, replacedArgs, {
-			stdio: 'inherit',
-		})
+		const { status } = spawn.sync(command, replacedArgs, { stdio: 'inherit' })
 		process.exit(status ?? 0)
+	}
+
+	// 5. Scaffold from embedded templates
+	const templateData = templates[template]
+	if (!templateData) {
+		prompts.log.error(`Template "${template}" not found`)
+		process.exit(1)
 	}
 
 	prompts.log.step(`Scaffolding project in ${root}...`)
 
-	const templateDir = path.resolve(
-		fileURLToPath(import.meta.url),
-		'../..',
-		`template-${template}`,
-	)
+	const variantConfig =
+		FRAMEWORKS.flatMap((f) => f.variants).find((v) => v.name === template)
+	const isMonorepo = variantConfig?.monorepo ?? false
+	const scope = isMonorepo ? `@${packageName}` : undefined
 
-	const write = (file: string, content?: string) => {
-		const targetPath = path.join(root, renameFiles[file] ?? file)
-		if (content) {
-			fs.writeFileSync(targetPath, content)
+	for (const [filePath, file] of Object.entries(templateData)) {
+		// Rename files like _gitignore → .gitignore
+		const fileName = path.basename(filePath)
+		const dirName = path.dirname(filePath)
+		const renamedName = RENAME_FILES[fileName] ?? fileName
+		const outputPath = dirName === '.'
+			? path.join(root, renamedName)
+			: path.join(root, dirName, renamedName)
+
+		fs.mkdirSync(path.dirname(outputPath), { recursive: true })
+
+		if (file.encoding === 'base64') {
+			fs.writeFileSync(outputPath, Buffer.from(file.content, 'base64'))
 		} else {
-			copy(path.join(templateDir, file), targetPath)
+			let content = file.content
+
+			// Replace root package.json name
+			if (filePath === 'package.json') {
+				const pkg = JSON.parse(content)
+				pkg.name = packageName
+				content = `${JSON.stringify(pkg, null, 2)}\n`
+			}
+
+			// Replace monorepo scope
+			if (scope) {
+				content = content.replaceAll('@repo/', `${scope}/`).replaceAll('@repo"', `${scope}"`)
+			}
+
+			// Update sub-package names and productName for monorepo
+			if (scope && filePath.endsWith('package.json') && filePath !== 'package.json') {
+				const pkg = JSON.parse(content)
+				const parts = filePath.split('/')
+				// e.g. apps/desktop/package.json → desktop, packages/ui/package.json → ui
+				if (parts.length === 3) {
+					pkg.name = `${scope}/${parts[1]}`
+				}
+				if (pkg.productName === 'my-electron-app') {
+					pkg.productName = packageName
+				}
+				content = `${JSON.stringify(pkg, null, 2)}\n`
+			}
+
+			fs.writeFileSync(outputPath, content)
 		}
 	}
-
-	const files = fs.readdirSync(templateDir)
-	for (const file of files.filter((f) => f !== 'package.json')) {
-		write(file)
-	}
-
-	const pkg = JSON.parse(
-		fs.readFileSync(path.join(templateDir, 'package.json'), 'utf-8'),
-	)
-
-	pkg.name = packageName
-
-	write('package.json', `${JSON.stringify(pkg, null, 2)}\n`)
 
 	if (isReactSwc) {
 		setupReactSwc(root, template.endsWith('-ts'))
 	}
 
-	// 6. Handle monorepo scope replacement
-	const variantConfig =
-		FRAMEWORKS.flatMap((f) => f.variants).find((v) => v.name === template)
-	if (variantConfig?.monorepo) {
-		const scope = `@${packageName}`
-		replaceMonorepoScope(root, scope)
-
-		// Also update sub-package names
-		const appsDir = path.join(root, 'apps')
-		const packagesDir = path.join(root, 'packages')
-		for (const dir of [appsDir, packagesDir]) {
-			if (!fs.existsSync(dir)) continue
-			for (const sub of fs.readdirSync(dir)) {
-				const subPkg = path.join(dir, sub, 'package.json')
-				if (fs.existsSync(subPkg)) {
-					const content = JSON.parse(fs.readFileSync(subPkg, 'utf-8'))
-					content.name = `${scope}/${sub}`
-					if (content.productName === 'my-electron-app') {
-						content.productName = packageName
-					}
-					fs.writeFileSync(subPkg, `${JSON.stringify(content, null, 2)}\n`)
-				}
-			}
-		}
-	}
-
-	let doneMessage = ''
+	// Done
+	let doneMessage = 'Done. Now run:\n'
 	const cdProjectName = path.relative(cwd, root)
-	doneMessage += 'Done. Now run:\n'
 	if (root !== cwd) {
 		doneMessage += `\n  cd ${
 			cdProjectName.includes(' ') ? `"${cdProjectName}"` : cdProjectName
@@ -273,50 +264,10 @@ async function init() {
 	prompts.outro(doneMessage)
 }
 
-function replaceMonorepoScope(root: string, scope: string) {
-	const textExtensions = new Set([
-		'.ts',
-		'.tsx',
-		'.js',
-		'.jsx',
-		'.json',
-		'.css',
-		'.html',
-		'.mjs',
-		'.cjs',
-		'.yaml',
-		'.yml',
-	])
-
-	function walkAndReplace(dir: string) {
-		for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-			const fullPath = path.join(dir, entry.name)
-			if (entry.isDirectory()) {
-				walkAndReplace(fullPath)
-			} else if (textExtensions.has(path.extname(entry.name))) {
-				const content = fs.readFileSync(fullPath, 'utf-8')
-				const replaced = content.replaceAll('@repo/', `${scope}/`).replaceAll('@repo"', `${scope}"`)
-				if (replaced !== content) {
-					fs.writeFileSync(fullPath, replaced, 'utf-8')
-				}
-			}
-		}
-	}
-
-	walkAndReplace(root)
-}
+// -- Helpers --
 
 function formatTargetDir(targetDir: string) {
 	return targetDir.trim().replace(/\/+$/g, '')
-}
-
-function copy(src: string, dest: string) {
-	const stat = fs.statSync(src)
-	if (stat.isDirectory()) {
-		copyDir(src, dest)
-	} else {
-		fs.copyFileSync(src, dest)
-	}
 }
 
 function isValidPackageName(projectName: string) {
@@ -334,28 +285,15 @@ function toValidPackageName(projectName: string) {
 		.replace(/[^a-z\d\-~]+/g, '-')
 }
 
-function copyDir(srcDir: string, destDir: string) {
-	fs.mkdirSync(destDir, { recursive: true })
-	for (const file of fs.readdirSync(srcDir)) {
-		const srcFile = path.resolve(srcDir, file)
-		const destFile = path.resolve(destDir, file)
-		copy(srcFile, destFile)
-	}
-}
-
-function isEmpty(path: string) {
-	const files = fs.readdirSync(path)
+function isEmpty(dirPath: string) {
+	const files = fs.readdirSync(dirPath)
 	return files.length === 0 || (files.length === 1 && files[0] === '.git')
 }
 
 function emptyDir(dir: string) {
-	if (!fs.existsSync(dir)) {
-		return
-	}
+	if (!fs.existsSync(dir)) return
 	for (const file of fs.readdirSync(dir)) {
-		if (file === '.git') {
-			continue
-		}
+		if (file === '.git') continue
 		fs.rmSync(path.resolve(dir, file), { recursive: true, force: true })
 	}
 }
@@ -376,7 +314,6 @@ function pkgFromUserAgent(userAgent: string | undefined): PkgInfo | undefined {
 }
 
 function setupReactSwc(root: string, isTs: boolean) {
-	// renovate: datasource=npm depName=@vitejs/plugin-react-swc
 	const reactSwcPluginVersion = '3.9.0'
 
 	editFile(path.resolve(root, 'package.json'), (content) => {
@@ -402,35 +339,17 @@ function getFullCustomCommand(customCommand: string, pkgInfo?: PkgInfo) {
 	return (
 		customCommand
 			.replace(/^npm create (?:-- )?/, () => {
-				// `bun create` uses it's own set of templates,
-				// the closest alternative is using `bun x` directly on the package
-				if (pkgManager === 'bun') {
-					return 'bun x create-'
-				}
-				// pnpm doesn't support the -- syntax
-				if (pkgManager === 'pnpm') {
-					return 'pnpm create '
-				}
-				// For other package managers, preserve the original format
+				if (pkgManager === 'bun') return 'bun x create-'
+				if (pkgManager === 'pnpm') return 'pnpm create '
 				return customCommand.startsWith('npm create -- ')
 					? `${pkgManager} create -- `
 					: `${pkgManager} create `
 			})
-			// Only Yarn 1.x doesn't support `@version` in the `create` command
 			.replace('@latest', () => (isYarn1 ? '' : '@latest'))
 			.replace(/^npm exec/, () => {
-				// Prefer `pnpm dlx`, `yarn dlx`, or `bun x`
-				if (pkgManager === 'pnpm') {
-					return 'pnpm dlx'
-				}
-				if (pkgManager === 'yarn' && !isYarn1) {
-					return 'yarn dlx'
-				}
-				if (pkgManager === 'bun') {
-					return 'bun x'
-				}
-				// Use `npm exec` in all other cases,
-				// including Yarn 1.x and other custom npm clients.
+				if (pkgManager === 'pnpm') return 'pnpm dlx'
+				if (pkgManager === 'yarn' && !isYarn1) return 'yarn dlx'
+				if (pkgManager === 'bun') return 'bun x'
 				return 'npm exec'
 			})
 	)
