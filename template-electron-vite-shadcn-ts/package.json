@@ -1,0 +1,37 @@
+{
+  "name": "my-electron-app",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Electron + Vite + shadcn/ui + TypeScript monorepo",
+  "license": "MIT",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "check": "turbo run check",
+    "fix": "turbo run fix",
+    "prepare": "lefthook install"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "cz-git": "^1.12.0",
+    "lefthook": "^2.1.4",
+    "oxfmt": "^0.41.0",
+    "oxlint": "^1.56.0",
+    "tslib": "^2.8.1",
+    "turbo": "^2.8.17",
+    "typescript": "~5.9.3",
+    "ultracite": "7.3.2"
+  },
+  "packageManager": "pnpm@10.32.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "electron-winstaller",
+      "fs-xattr",
+      "lefthook",
+      "macos-alias"
+    ]
+  }
+}

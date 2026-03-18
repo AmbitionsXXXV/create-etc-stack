@@ -13,8 +13,8 @@ export default defineBuildConfig({
   hooks: {
     'rollup:options'(_ctx, options) {
       options.plugins = [
-        options.plugins,
-      ]
+        options.plugins as unknown,
+      ] as typeof options.plugins
     },
   },
 })

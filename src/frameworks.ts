@@ -13,12 +13,26 @@ export type FrameworkVariant = {
 	display: string
 	color: ColorFunc
 	customCommand?: string
+	monorepo?: boolean
 }
 
-const { blue, cyan, yellow } = colors
+const { blue, cyan, magenta, yellow } = colors
 
 // -- 框架与模板定义 -- Frameworks and templates definition
 export const FRAMEWORKS: Framework[] = [
+	{
+		name: 'electron',
+		display: 'Electron',
+		color: magenta,
+		variants: [
+			{
+				name: 'electron-vite-shadcn-ts',
+				display: 'Vite + shadcn/ui + TypeScript',
+				color: blue,
+				monorepo: true,
+			},
+		],
+	},
 	{
 		name: 'astro',
 		display: 'Astro',

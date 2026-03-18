@@ -1,11 +1,19 @@
 {
 	"name": "create-etc-stack",
-	"version": "0.2.3",
+	"version": "0.3.0",
 	"type": "module",
 	"description": "Quickly scaffold new, opinionated project structures suitable for medium-sized applications, enforcing strong specifications and best practices from the start.",
 	"license": "MIT",
 	"author": "Etcetera",
-	"keywords": ["cli", "template", "typescript", "biome", "monorepo"],
+	"keywords": [
+		"cli",
+		"template",
+		"typescript",
+		"biome",
+		"monorepo",
+		"electron",
+		"shadcn"
+	],
 	"bin": {
 		"create-etc-stack": "index.js",
 		"cva": "index.js"
@@ -13,6 +21,7 @@
 	"files": [
 		"index.js",
 		"template-astro-tailwind",
+		"template-electron-vite-shadcn-ts",
 		"template-react-ts-biome-tailwind",
 		"dist"
 	],
@@ -32,14 +41,14 @@
 	},
 	"homepage": "https://github.com/AmbitionsXXXV/create-etc-stack#readme",
 	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
-		"@changesets/cli": "^2.29.3",
-		"@clack/prompts": "^0.10.1",
+		"@biomejs/biome": "2.4.7",
+		"@changesets/cli": "^2.30.0",
+		"@clack/prompts": "^1.1.0",
 		"@types/cross-spawn": "^6.0.6",
-		"@types/node": "^22.14.1",
+		"@types/node": "^25.5.0",
 		"cross-spawn": "^7.0.6",
 		"mri": "^1.2.0",
 		"picocolors": "^1.1.1",
-		"unbuild": "^3.5.0"
+		"unbuild": "^3.6.1"
 	}
 }
