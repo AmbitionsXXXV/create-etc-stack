@@ -1,19 +1,23 @@
 {
 	"name": "create-etc-stack",
 	"version": "0.4.0",
-	"type": "module",
 	"description": "Quickly scaffold new, opinionated project structures suitable for medium-sized applications, enforcing strong specifications and best practices from the start.",
+	"keywords": [
+		"biome",
+		"cli",
+		"electron",
+		"monorepo",
+		"shadcn",
+		"template",
+		"typescript"
+	],
+	"homepage": "https://github.com/AmbitionsXXXV/create-etc-stack#readme",
 	"license": "MIT",
 	"author": "Etcetera",
-	"keywords": [
-		"cli",
-		"template",
-		"typescript",
-		"biome",
-		"monorepo",
-		"electron",
-		"shadcn"
-	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/AmbitionsXXXV/create-etc-stack.git"
+	},
 	"bin": {
 		"create-etc-stack": "dist/index.mjs",
 		"cva": "dist/index.mjs"
@@ -21,24 +25,20 @@
 	"files": [
 		"dist"
 	],
+	"type": "module",
 	"scripts": {
-		"dev": "tsdown --watch",
-		"build": "bun run scripts/embed-templates.ts && tsdown",
+		"dev": "vp pack --watch",
+		"build": "bun run scripts/embed-templates.ts && vp pack",
 		"build:compile": "bun run scripts/embed-templates.ts && bun build src/index.ts --compile --minify --bytecode --outfile create-etc-stack",
+		"check": "vp check",
+		"fix": "vp check --fix",
+		"lint": "vp lint",
+		"fmt": "vp fmt . --write",
 		"typecheck": "tsc --noEmit",
 		"prepublishOnly": "bun run build",
 		"publish-packages": "bun run build && changeset publish"
 	},
-	"engines": {
-		"node": ">=20"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/AmbitionsXXXV/create-etc-stack.git"
-	},
-	"homepage": "https://github.com/AmbitionsXXXV/create-etc-stack#readme",
 	"devDependencies": {
-		"@biomejs/biome": "2.4.7",
 		"@changesets/cli": "^2.30.0",
 		"@clack/prompts": "^1.1.0",
 		"@types/cross-spawn": "^6.0.6",
@@ -46,6 +46,10 @@
 		"cross-spawn": "^7.0.6",
 		"mri": "^1.2.0",
 		"picocolors": "^1.1.1",
-		"tsdown": "^0.21.4"
+		"typescript": "~5.9.3",
+		"vite-plus": "^0.1.14"
+	},
+	"engines": {
+		"node": ">=20"
 	}
 }

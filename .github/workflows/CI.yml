@@ -3,11 +3,11 @@ name: Publish
 on:
   push:
     tags:
-      - 'v*.*.*'
-    paths: 
-      - '.changeset/**'
-      - 'package.json'
-      - 'bun.lock'
+      - "v*.*.*"
+    paths:
+      - ".changeset/**"
+      - "package.json"
+      - "bun.lock"
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 

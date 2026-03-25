@@ -11,9 +11,9 @@
     "dev": "electron-forge start",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "oxlint",
-    "check": "ultracite check",
-    "fix": "ultracite fix"
+    "lint": "vp lint",
+    "check": "vp check",
+    "fix": "vp check --fix"
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1"
@@ -48,7 +48,6 @@
     "react-dom": "catalog:",
     "tailwindcss": "catalog:",
     "tslib": "^2.8.1",
-    "vite": "^8.0.0",
     "zod": "catalog:"
   },
   "productName": "my-electron-app"

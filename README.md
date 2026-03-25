@@ -41,17 +41,17 @@ npx create-etc-stack@latest my-app -t electron-vite-shadcn-ts
 
 ### Electron
 
-| Template | Stack |
-|----------|-------|
+| Template                  | Stack                                                                                                           |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `electron-vite-shadcn-ts` | Electron 41 + Vite + React 19 + TanStack Router/Query + shadcn/ui (base-mira) + Tailwind CSS 4 + Turbo monorepo |
 
 ### React
 
-| Template | Stack |
-|----------|-------|
+| Template                  | Stack                                               |
+| ------------------------- | --------------------------------------------------- |
 | `react-ts-biome-tailwind` | React Router v7 + TypeScript + Biome + Tailwind CSS |
-| React Router ↗ | `npm create react-router@latest` (custom command) |
-| TanStack Router ↗ | `npm create tsrouter-app@latest` (custom command) |
+| React Router ↗            | `npm create react-router@latest` (custom command)   |
+| TanStack Router ↗         | `npm create tsrouter-app@latest` (custom command)   |
 
 ### Astro
 
@@ -63,7 +63,7 @@ Astro templates are planned — contributions welcome.
 # Install dependencies
 bun install
 
-# Build for npm (tsdown)
+# Build for npm (vp pack)
 bun run build
 
 # Build standalone binary (bun compile)
@@ -71,28 +71,33 @@ bun run build:compile
 
 # Development (watch mode)
 bun run dev
+
+# Lint & format
+bun run check
+bun run fmt
 ```
 
 ### Build Outputs
 
-| Command | Output | Size | Use case |
-|---------|--------|------|----------|
-| `bun run build` | `dist/index.mjs` | ~135 KB | npm publish |
-| `bun run build:compile` | `create-etc-stack` | ~62 MB | Standalone binary |
+| Command                 | Output             | Size    | Use case          |
+| ----------------------- | ------------------ | ------- | ----------------- |
+| `bun run build`         | `dist/index.mjs`   | ~135 KB | npm publish       |
+| `bun run build:compile` | `create-etc-stack` | ~62 MB  | Standalone binary |
 
 ### How it Works
 
 Templates are embedded into the CLI bundle at build time:
 
 1. `scripts/embed-templates.ts` reads all `template-*` directories and generates `src/generated/templates.ts`
-2. tsdown (or bun) bundles everything into a single file
+2. Vite+ (`vp pack`) bundles everything into a single file via tsdown
 3. At runtime, the CLI writes files from embedded data — no template directories needed on disk
 
 This architecture enables both npm distribution and standalone binary distribution from the same codebase.
 
 ## Tech Stack
 
-- **Bundler** — [tsdown](https://tsdown.dev) (powered by Rolldown)
+- **Toolchain** — [Vite+](https://viteplus.dev) (unified dev/build/lint/format/pack)
+- **Bundler** — [tsdown](https://tsdown.dev) via `vp pack` (powered by Rolldown)
 - **Binary** — [Bun single-file executable](https://bun.sh/docs/bundler/executables)
 - **Prompts** — [@clack/prompts](https://github.com/bombshell-dev/clack)
 - **Templates** — Embedded at build time, supports text + binary files

@@ -10,9 +10,9 @@
     "./hooks/*": "./src/hooks/*.ts"
   },
   "scripts": {
-    "lint": "oxlint",
-    "check": "ultracite check",
-    "fix": "ultracite fix"
+    "lint": "vp lint",
+    "check": "vp check",
+    "fix": "vp check --fix"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

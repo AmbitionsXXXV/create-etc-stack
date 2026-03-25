@@ -1,4 +1,4 @@
-import colors from 'picocolors'
+import colors from "picocolors"
 
 // -- 类型定义 -- Type definitions
 export type ColorFunc = (str: string | number) => string
@@ -21,27 +21,27 @@ const { blue, cyan, magenta, yellow } = colors
 // -- 框架与模板定义 -- Frameworks and templates definition
 export const FRAMEWORKS: Framework[] = [
 	{
-		name: 'electron',
-		display: 'Electron',
+		name: "electron",
+		display: "Electron",
 		color: magenta,
 		variants: [
 			{
-				name: 'electron-vite-shadcn-ts',
-				display: 'Vite + shadcn/ui + TypeScript',
+				name: "electron-vite-shadcn-ts",
+				display: "Vite + shadcn/ui + TypeScript",
 				color: blue,
-				monorepo: true,
-			},
-		],
+				monorepo: true
+			}
+		]
 	},
 	{
-		name: 'astro',
-		display: 'Astro',
+		name: "astro",
+		display: "Astro",
 		color: yellow,
-		variants: [],
+		variants: []
 	},
 	{
-		name: 'react',
-		display: 'React',
+		name: "react",
+		display: "React",
 		color: cyan,
 		variants: [
 			// {
@@ -56,7 +56,7 @@ export const FRAMEWORKS: Framework[] = [
 			// },
 			// {
 			// 	name: 'react',
-            
+
 			// 	display: 'JavaScript',
 			// 	color: yellow,
 			// },
@@ -66,28 +66,28 @@ export const FRAMEWORKS: Framework[] = [
 			// 	color: yellow,
 			// },
 			{
-				name: 'react-ts-biome-tailwind',
-				display: 'TypeScript + Biome + Tailwind',
-				color: blue,
+				name: "react-ts-biome-tailwind",
+				display: "TypeScript + Biome + Tailwind",
+				color: blue
 			},
 			{
-				name: 'custom-react-router',
-				display: 'React Router v7 ↗',
+				name: "custom-react-router",
+				display: "React Router v7 ↗",
 				color: cyan,
-				customCommand: 'npm create react-router@latest TARGET_DIR',
+				customCommand: "npm create react-router@latest TARGET_DIR"
 			},
 			{
-				name: 'custom-tanstack-router',
-				display: 'TanStack Router ↗',
+				name: "custom-tanstack-router",
+				display: "TanStack Router ↗",
 				color: cyan,
 				customCommand:
-					'npm create -- tsrouter-app@latest TARGET_DIR --framework react --interactive',
-			},
-		],
-	},
+					"npm create -- tsrouter-app@latest TARGET_DIR --framework react --interactive"
+			}
+		]
+	}
 ]
 
 export const TEMPLATES = FRAMEWORKS.map((f) => f.variants.map((v) => v.name)).reduce(
 	(a, b) => a.concat(b),
-	[],
+	[]
 )
