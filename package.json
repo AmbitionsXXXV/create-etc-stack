@@ -1,15 +1,15 @@
 {
 	"name": "create-etc-stack",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"description": "Quickly scaffold new, opinionated project structures suitable for medium-sized applications, enforcing strong specifications and best practices from the start.",
 	"keywords": [
-		"biome",
 		"cli",
 		"electron",
 		"monorepo",
 		"shadcn",
 		"template",
-		"typescript"
+		"typescript",
+		"vite-plus"
 	],
 	"homepage": "https://github.com/AmbitionsXXXV/create-etc-stack#readme",
 	"license": "MIT",
