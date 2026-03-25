@@ -1,6 +1,6 @@
 {
 	"name": "create-etc-stack",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"description": "Quickly scaffold new, opinionated project structures suitable for medium-sized applications, enforcing strong specifications and best practices from the start.",
 	"keywords": [
 		"cli",
