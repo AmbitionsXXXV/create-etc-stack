@@ -47,9 +47,10 @@
 		"mri": "^1.2.0",
 		"picocolors": "^1.1.1",
 		"typescript": "~5.9.3",
-		"vite-plus": "^0.1.14"
+		"vite-plus": "^0.1.16"
 	},
 	"engines": {
 		"node": ">=22"
-	}
+	},
+	"packageManager": "bun@1.3.12"
 }
